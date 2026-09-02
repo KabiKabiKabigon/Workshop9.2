@@ -1,123 +1,85 @@
-# Reference
+# Workshop 9.2 - Continuous Integration
 
-## Maven Command
+This repository implements the Spring Boot CI workshop in `CIWorkshop v4.0.pdf`.
 
-1. mvnw
+## Implemented API endpoints
 
-2. mvnw compile
+| Method | Endpoint | Response |
+|---|---|---|
+| GET | `/` | `HEALTH CHECK OK!` |
+| GET | `/version` | `The actual version is 1.0.0` |
+| GET | `/nations` | JSON array containing 10 random nations |
+| GET | `/currencies` | JSON array containing 20 random currencies |
 
-3. mvnw clean package
+## Run locally
 
-4. mvnw spring-boot:run
+Java 17 or newer is required.
 
-5. mvnw clean package spring-boot:run
+```bash
+./mvnw spring-boot:run
+```
 
-6. mvnw spring-boot:run -Dspring-boot.run.arguments="--port=3000"
+Then test the endpoints with a browser, Postman, or curl:
 
-7. mvnw spring-boot:run -Dspring-boot.run.arguments="--port=3000 --dataDir=c:\data"
+```bash
+curl http://localhost:8080/
+curl http://localhost:8080/version
+curl http://localhost:8080/nations
+curl http://localhost:8080/currencies
+```
 
-8. mvnw clean test
+## Test and coverage
 
+```bash
+./mvnw clean verify
+```
 
-## Git command
+The tests exercise all four workshop endpoints. JaCoCo creates the HTML report at
+`target/site/jacoco/index.html`. The Maven build fails if line coverage of
+`DataController` is below 90%.
 
-1. git init (initial a local repo, doesn't link to remote yet)
+## GitHub Actions CI
 
-2. <create a git remote repo>
+`.github/workflows/maven.yml` runs on pushes and pull requests to `main` and contains:
 
-3. git remote add origin https://github.com/<username>/<reponame>.git
+1. `test` - builds with Java 17, runs all tests, enforces coverage, and uploads the JaCoCo report.
+2. `sonar` - runs SonarCloud analysis after tests pass when `SONAR_TOKEN` is configured.
+3. `snyk` - scans Maven dependencies after tests pass when `SNYK_TOKEN` is configured.
 
-4. git add * (add new/updated files to be commited into local repo)
+To enable the account-dependent integrations:
 
-5. git status (to check files that are going to commit into local repo)
+1. Create/import this repository in SonarCloud and disable Automatic Analysis.
+2. In GitHub, open **Settings > Secrets and variables > Actions**.
+3. Add repository secret `SONAR_TOKEN` from SonarCloud.
+4. Import the repository into Snyk and add repository secret `SNYK_TOKEN`.
+5. If the SonarCloud organization or project key differs, update the three `sonar.*`
+   properties in `pom.xml`.
 
-6. git commit -m "<commit message>" (commit new/updated files to local repo)
+The built-in `GITHUB_TOKEN` is supplied automatically by GitHub Actions. Secrets are never
+stored in this repository. When a third-party token is absent, its job reports that setup is
+pending without breaking the test pipeline.
 
-7. git push -u origin master (create a master branch in github and push the code to github master branch)
+## Docker
 
-8. <don't develop in master branch - final/latest working baseline>
+The multi-stage Docker build compiles and tests the application, then produces a Java 17
+runtime image. The container listens on port 5000.
 
-9. git checkout -b develop master (clone a copy from master to develop branch locally)
+```bash
+docker build -t workshop9.2 .
+docker run --rm -p 8090:5000 workshop9.2
+```
 
-10. git push -u origin develop (push from local develop branch to github develop branch)
+Test it at `http://localhost:8090/`.
 
-11. git checkout develop (to switch between branches)
+To publish to Docker Hub:
 
-12. git branch -a (show all local branches and remote branch refernces)
+```bash
+docker tag workshop9.2 YOUR_DOCKERHUB_USERNAME/workshop9.2:latest
+docker push YOUR_DOCKERHUB_USERNAME/workshop9.2:latest
+```
 
-13. git branch (show all local branches)
+## Optional Railway deployment
 
-14. <always develop in develop branch>
-
-15. git add *
-
-16. git commit -m "<commit changes>"
-
-17. git push -u origin develop (push code on local develop branch to github develop branch)
-
-18. git checkout master
-
-19. git merge develop (after changes in develop branch are complete without errors, in master branch, merge changes from develop branch)
-
-20. git push -u origin master (in master branch to push merged changes from develop branch to github master branch)
-
-##Deploy to heroku (must be on master branch locally and remote)
-1. Create/use an existing heroku account
-
-2. On your project root, you need a system.properties file.
-
-3. put the following line in system.properties files.
-java.runtime.version=18
-
-4. git add *
-
-5. git commit -m "added/updated system.properties"
-
-6. git push -u origin master
-
-7. heroku login (in your terminal window/command prompt in the project root directory)
-
-8. heroku apps:create
-
-9. git remote -v (all remote branches. you should see refernce URL to heroku)
-
-10. git push -u heroku master
-
-
-## Git reset reference
-https://www.w3docs.com/learn-git/git-reset.html
-
-echo 'new file content' > test_file
-
-echo 'append content' >> edited_file
-
-git add test_file edited_file
-
-git status
-
-git ls-files -s
-
-git reset HEAD
-
-git add test_file edited_file
-
-git commit -m "added test_file edited_file"
-
-git log
-
-git reset --soft xxxxxxxxxxx
-
-git reset --hard
-
-## Tagging
-https://initialcommit.com/blog/git-tag#:~:text=A%20tag%20is%20technically%20a%20type%20of%20ref,git%20tag%20v1.0.0%20%24%20git%20tag%20--list%20v1.0.0
-
-git tag -a v1.0.0
-
-git tag --list
-
-git push --tags
-
-git ls-remote --tags
-
-EPAT Aug19
+Create a Railway project from this GitHub repository. Railway can build the Dockerfile and
+redeploy automatically after pushes to the selected branch. Third-party account authorization
+must be completed by the repository owner in Railway.

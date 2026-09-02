@@ -1,5 +1,5 @@
 # first stage
-FROM openjdk:23-jdk-oracle AS builder
+FROM eclipse-temurin:17-jdk AS builder
 
 WORKDIR /app
 
@@ -8,17 +8,17 @@ COPY mvnw.cmd .
 COPY .mvn .mvn
 COPY src src
 COPY pom.xml .
-RUN ./mvnw package -DskipTests=true
+RUN ./mvnw clean package
 
 # second stage
-FROM openjdk:23-jdk-oracle
+FROM eclipse-temurin:17-jre
 
 WORKDIR /runningapp
 
 COPY --from=builder /app/target/d13revision-0.0.1-SNAPSHOT.jar .
 
-ENV SERVER_PORT=8085
+ENV SERVER_PORT=5000
 
 EXPOSE ${SERVER_PORT}
 
-CMD ["java", "-jar", "d13revision-0.0.1-SNAPSHOT.jar"]
+ENTRYPOINT ["java", "-jar", "d13revision-0.0.1-SNAPSHOT.jar"]
