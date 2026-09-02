@@ -23,7 +23,7 @@ jobs:
           distribution: temurin
           cache: maven
       - name: Run tests and create JaCoCo report
-        run: ./mvnw --batch-mode clean verify
+        run: mvn --batch-mode clean verify
       - name: Upload JaCoCo report
         uses: actions/upload-artifact@v4
         with:
@@ -49,7 +49,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
-        run: ./mvnw --batch-mode verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
+        run: mvn --batch-mode verify org.sonarsource.scanner.maven:sonar-maven-plugin:sonar
       - name: SonarCloud setup notice
         if: ${{ env.SONAR_TOKEN == '' }}
         run: echo 'SonarCloud analysis skipped because SONAR_TOKEN is not configured.'
